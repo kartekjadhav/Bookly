@@ -1,6 +1,6 @@
 from datetime import datetime
 from sqlalchemy.ext.asyncio.session import AsyncSession
-from schemas.schemas import Book, BookCreateModel, BookUpdateModel
+from schemas.schemas import BookCreateModel, BookUpdateModel
 from sqlmodel import select, desc
 from models.models import Book
 
@@ -13,7 +13,7 @@ class BookService:
     async def get_a_book(self, book_uid:str, session: AsyncSession):
         statement = select(Book).where(Book.id == book_uid)
         result = await session.execute(statement=statement)
-        book = result.first()
+        book = result.scalars().first()
 
         return book if book is not None else None
 
@@ -31,22 +31,22 @@ class BookService:
         return new_book
 
     async def update_book(self, book_uid: str, update_data: BookUpdateModel, session: AsyncSession):
-        book_to_update = self.get_a_book(book_uid, session)
+        book_to_update = await self.get_a_book(book_uid, session)
 
-        if update_data is not None:
-            for k, v in update_data.model_dump():
+        if update_data is None:
+            return None
+        else:
+            for k, v in update_data.model_dump().items():
                 setattr(book_to_update, k, v)
             await session.commit()
             return book_to_update
-        else:
-            return None
 
     async def delete_book(self, book_uid: str, session: AsyncSession):
-        book_to_delete = self.get_a_book(book_uid=book_uid)
+        book_to_delete = await self.get_a_book(book_uid=book_uid, session=session)
 
-        if book_to_delete is not None:
-            session.delete(book_to_delete)
+        if book_to_delete is None:
+            return None
+        else:
+            await session.delete(book_to_delete)
             await session.commit()
             return {}
-        else:
-            return None
