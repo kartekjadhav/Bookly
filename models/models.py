@@ -26,3 +26,25 @@ class Book(SQLModel, table=True):
 
     def __repr__(self):
         return f"<Book {self.title}>"
+
+
+
+class User(SQLModel, table=True):
+    __tablename__ = "users"
+
+    uid: UUID = Field(sa_column=Column(
+        pg.UUID,
+        default=uuid4,
+        primary_key=True,
+        nullable=False,
+    ))
+    username: str
+    first_name: str
+    last_name: str
+    email: str
+    verified: bool = Field(default=False)
+    created_at: datetime = Field(sa_column=Column(pg.TIMESTAMP, default=datetime.now))
+    updated_at: datetime = Field(sa_column=Column(pg.TIMESTAMP, default=datetime.now))
+
+    def __repr__(self):
+        return f"<User {self.username}>"
