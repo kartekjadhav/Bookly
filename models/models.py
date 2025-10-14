@@ -43,6 +43,7 @@ class User(SQLModel, table=True):
     last_name: str
     email: str
     verified: bool = Field(default=False)
+    password_hash: str = Field(sa_column=Column(pg.VARCHAR, nullable=False), exclude=True)
     created_at: datetime = Field(sa_column=Column(pg.TIMESTAMP, default=datetime.now))
     updated_at: datetime = Field(sa_column=Column(pg.TIMESTAMP, default=datetime.now))
 

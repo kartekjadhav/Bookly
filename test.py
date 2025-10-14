@@ -1,7 +1,13 @@
-arr = [1, 2, 3, 4, 5]
+from passlib.context import CryptContext
 
-def func():
-    yield from arr
+pwd_context = CryptContext(
+    schemes=['bcrypt']
+)
 
-for i in func():
-    print(i)
+hashed_pass = pwd_context.hash("My name is Kartek")
+
+print("Hashed password - ", hashed_pass)
+
+is_valid = pwd_context.verify("My name is Kartek", hashed_pass)
+
+print("is valid? - ", is_valid)

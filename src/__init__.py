@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from src.books.books import bookRouter
+from src.auth.router import userRouter
 from db.main import init_db
 
 version = "v1"
@@ -20,3 +21,5 @@ app = FastAPI(
 )
 
 app.include_router(router=bookRouter, prefix=f"/api/{version}/books", tags=["books"])
+
+app.include_router(router=userRouter, prefix=f"/api/{version}/auth", tags=["users"])
