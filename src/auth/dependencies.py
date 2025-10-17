@@ -1,0 +1,25 @@
+from fastapi import Request, status
+from fastapi.exceptions import HTTPException
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from src.auth.utils import decode_token
+
+class AccessTokenBearer(HTTPBearer):
+    def __init__(self, auto_error = True):
+        super().__init__(auto_error=auto_error)
+
+    async def __call__(self, request:Request) -> HTTPAuthorizationCredentials | None:
+        creds = await super().__call__(request=request)
+
+        token = creds.credentials
+        token_data = self.token_valid(token)
+        if token_data is None:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Invalid or expired token.")
+        if token_data['refresh'] == True:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Please provide an access token.")
+        
+        return token_data
+
+        
+    def token_valid(self, token:str) -> dict | None:
+        token_data = decode_token(token=token)
+        return token_data if token_data is not None else None

@@ -37,7 +37,7 @@ def create_access_token(userData: dict, expiry:timedelta=None, refresh:bool=Fals
 
     return token
 
-def verify_access_token(token:str):
+def decode_token(token:str):
     try:
         token_data = jwt.decode(
             jwt=token,

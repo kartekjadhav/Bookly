@@ -6,7 +6,7 @@ from datetime import timedelta
 from schemas.users import UserModel, UserCreateModel, UserLoginModel
 from db.main import get_session
 from .services import UserServices
-from .utils import verify_access_token, create_access_token, verify_password
+from .utils import decode_token, create_access_token, verify_password
 
 REFRESH_TOKEN_EXPIRY = 2
 
