@@ -7,7 +7,8 @@ from schemas.users import UserModel, UserCreateModel, UserLoginModel
 from db.main import get_session
 from .services import UserServices
 from .utils import decode_token, create_access_token, verify_password
-from .dependencies import RefreshTokenBearer
+from .dependencies import RefreshTokenBearer, AccessTokenBearer
+from db.redis import add_jti_to_blocklist, check_jti_in_blocklist
 
 REFRESH_TOKEN_EXPIRY = 2
 
@@ -84,3 +85,13 @@ async def get_new_access_token(userData:dict = Depends(RefreshTokenBearer())):
             content={'access_token':new_access_token}
         )
     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Refresh token has expired.")
+
+@userRouter.get("/logout")
+async def revoke_token(userData:dict=Depends(AccessTokenBearer())):
+    jti = userData['jti']
+    await add_jti_to_blocklist(jti)
+    return JSONResponse(content={
+            "message": "Logged out successfully."
+        },
+        status_code=status.HTTP_200_OK
+    )   
