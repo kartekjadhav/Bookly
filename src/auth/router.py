@@ -1,12 +1,13 @@
 from fastapi import APIRouter, status, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from sqlmodel.ext.asyncio.session import AsyncSession
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 from schemas.users import UserModel, UserCreateModel, UserLoginModel
 from db.main import get_session
 from .services import UserServices
 from .utils import decode_token, create_access_token, verify_password
+from .dependencies import RefreshTokenBearer
 
 REFRESH_TOKEN_EXPIRY = 2
 
@@ -71,3 +72,15 @@ async def login_users(userData:UserLoginModel, session:AsyncSession=Depends(get_
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"User with email {email} not found"
         )
+
+@userRouter.get("/refresh_token")
+async def get_new_access_token(userData:dict = Depends(RefreshTokenBearer())):
+    expiry_timestamp = userData['exp']
+    if datetime.fromtimestamp(expiry_timestamp) > datetime.now():
+        new_access_token = create_access_token(
+            userData=userData['user']
+        )
+        return JSONResponse(
+            content={'access_token':new_access_token}
+        )
+    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Refresh token has expired.")
