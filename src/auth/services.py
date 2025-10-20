@@ -33,6 +33,7 @@ class UserServices:
             **user_data_dict,
             password_hash=generate_password_hash(userData.password)
         )
+        user.role = 'user' 
         session.add(user)
         await session.commit()
         return user

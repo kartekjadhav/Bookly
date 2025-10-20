@@ -4,21 +4,24 @@ from schemas.schemas import Book, BookCreateModel, BookUpdateModel
 from .services import BookService
 from sqlmodel.ext.asyncio.session import AsyncSession
 from db.main import get_session
-from src.auth.dependencies import AccessTokenBearer
+from src.auth.dependencies import AccessTokenBearer, RoleChecker
+
 
 bookRouter = APIRouter()
 bookService = BookService()
 access_token_bearer = AccessTokenBearer()
+roleChecker = Depends(RoleChecker(['admin', 'user']))
+
 
 # Get all books
-@bookRouter.get("/", status_code=status.HTTP_200_OK, response_model=List[Book])
+@bookRouter.get("/", status_code=status.HTTP_200_OK, response_model=List[Book], dependencies=[roleChecker])
 async def get_all_books(session: AsyncSession = Depends(get_session), user_details=Depends(access_token_bearer)):
     print(user_details)
     books = await bookService.get_all_books(session=session)
     return books
 
 # Create a book
-@bookRouter.post("/", status_code=status.HTTP_201_CREATED, response_model=Book)
+@bookRouter.post("/", status_code=status.HTTP_201_CREATED, response_model=Book, dependencies=[roleChecker])
 async def create_book(book_data: BookCreateModel, 
                         session: AsyncSession = Depends(get_session), user_details=Depends(access_token_bearer)
                     ):
@@ -31,7 +34,7 @@ async def create_book(book_data: BookCreateModel,
 
 
 # Get a book
-@bookRouter.get("/{book_uid}", response_model=Book, status_code=status.HTTP_200_OK)
+@bookRouter.get("/{book_uid}", response_model=Book, status_code=status.HTTP_200_OK, dependencies=[roleChecker])
 async def get_a_book(book_uid: str, session: AsyncSession = Depends(get_session), user_details=Depends(access_token_bearer)):
     book = await bookService.get_a_book(book_uid=book_uid, session=session)
     if book:
@@ -42,7 +45,7 @@ async def get_a_book(book_uid: str, session: AsyncSession = Depends(get_session)
             detail=f"Book with id {book_uid} not found"
         )
 
-@bookRouter.patch("/{book_uid}", status_code=status.HTTP_200_OK, response_model=Book)
+@bookRouter.patch("/{book_uid}", status_code=status.HTTP_200_OK, response_model=Book, dependencies=[roleChecker])
 async def update_book(book_uid: str,
                       update_data: BookUpdateModel,
                       session: AsyncSession = Depends(get_session), user_details=Depends(access_token_bearer)
@@ -66,7 +69,7 @@ async def update_book(book_uid: str,
         await session.rollback()
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error in updating book: {e}")
 
-@bookRouter.delete("/{book_uid}", status_code=status.HTTP_204_NO_CONTENT)
+@bookRouter.delete("/{book_uid}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[roleChecker])
 async def delete_book(book_uid: str, session: AsyncSession = Depends(get_session), user_details=Depends(access_token_bearer)):
     try:
         book_to_delete = await bookService.delete_book(

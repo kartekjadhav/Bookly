@@ -7,14 +7,14 @@ from schemas.users import UserModel, UserCreateModel, UserLoginModel
 from db.main import get_session
 from .services import UserServices
 from .utils import decode_token, create_access_token, verify_password
-from .dependencies import RefreshTokenBearer, AccessTokenBearer
+from .dependencies import RefreshTokenBearer, AccessTokenBearer, get_current_user, RoleChecker
 from db.redis import add_jti_to_blocklist, check_jti_in_blocklist
 
 REFRESH_TOKEN_EXPIRY = 2
 
 userRouter = APIRouter()
 userServices = UserServices()
-
+roleChecker = RoleChecker(['admin', 'user'])
 
 # Create User
 @userRouter.post(
@@ -43,14 +43,16 @@ async def login_users(userData:UserLoginModel, session:AsyncSession=Depends(get_
             accessToken = create_access_token(
                 userData={
                     'email': user.email,
-                    'uid': str(user.uid)
+                    'uid': str(user.uid),
+                    'role': user.role
                 }
             )
 
             refreshToken = create_access_token(
                 userData={
                     'email': user.email,
-                    'uid': str(user.uid)
+                    'uid': str(user.uid),
+                    'role': user.role
                 },
                 refresh=True,
                 expiry=timedelta(days=REFRESH_TOKEN_EXPIRY)
@@ -85,6 +87,10 @@ async def get_new_access_token(userData:dict = Depends(RefreshTokenBearer())):
             content={'access_token':new_access_token}
         )
     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Refresh token has expired.")
+
+@userRouter.get("/me")
+async def get_current_user_details(user = Depends(get_current_user), _:bool=Depends(roleChecker)):
+    return user
 
 @userRouter.get("/logout")
 async def revoke_token(userData:dict=Depends(AccessTokenBearer())):

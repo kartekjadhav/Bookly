@@ -1,3 +1,6 @@
-from datetime import datetime, timedelta
+class XYZ:
+    def __call__(self, *args, **kwds):
+        print("Hello world")
 
-print(datetime.now() + timedelta(days=2))
+obj = XYZ()
+obj()
