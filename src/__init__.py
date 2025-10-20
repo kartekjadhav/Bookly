@@ -16,8 +16,7 @@ async def lifeSpan(app:FastAPI):
 
 app = FastAPI(
     title="Book API",
-    version=version,
-    lifespan=lifeSpan
+    version=version
 )
 
 app.include_router(router=bookRouter, prefix=f"/api/{version}/books", tags=["books"])
