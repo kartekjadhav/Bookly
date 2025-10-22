@@ -88,7 +88,7 @@ async def get_new_access_token(userData:dict = Depends(RefreshTokenBearer())):
         )
     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Refresh token has expired.")
 
-@userRouter.get("/me")
+@userRouter.get("/me", response_model=UserModel)
 async def get_current_user_details(user = Depends(get_current_user), _:bool=Depends(roleChecker)):
     return user
 
